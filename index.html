@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoldBet - Cassino Premium</title>
+    <style>
+        body { background-color: #121212; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; margin: 0; }
+        header { background: linear-gradient(145deg, #d4af37, #8a6d3b); padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        h1 { margin: 0; letter-spacing: 2px; text-transform: uppercase; color: #000; }
+        .container { padding: 40px; }
+        .saldo-box { font-size: 24px; margin-bottom: 20px; border: 1px solid #d4af37; display: inline-block; padding: 10px 30px; border-radius: 50px; background: rgba(212, 175, 55, 0.1); }
+        .input-aposta { background: #222; border: 2px solid #d4af37; color: gold; padding: 15px; font-size: 20px; border-radius: 10px; width: 200px; text-align: center; }
+        .btn-apostar { background: linear-gradient(to bottom, #ffd700, #d4af37); border: none; padding: 15px 40px; font-size: 20px; font-weight: bold; cursor: pointer; border-radius: 10px; margin-top: 20px; transition: 0.3s; }
+        .btn-apostar:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(212, 175, 55, 0.6); }
+        #resultado { margin-top: 30px; font-size: 22px; font-weight: bold; min-height: 30px; }
+        .win { color: #4CAF50; text-shadow: 0 0 10px #4CAF50; }
+        .lose { color: #f44336; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>GOLDBET 🏆</h1>
+</header>
+
+<div class="container">
+    <div class="saldo-box">Saldo: R$ <span id="saldo">1000.00</span></div>
+    
+    <p>Insira o valor da sua aposta:</p>
+    <input type="number" id="valorAposta" class="input-aposta" value="10" min="1">
+    
+    <br>
+    <button class="btn-apostar" onclick="jogar()">GIRAR SORTE 🎰</button>
+
+    <div id="resultado"></div>
+</div>
+
+<script>
+    let saldo = 1000.00;
+
+    function jogar() {
+        const input = document.getElementById('valorAposta');
+        const valor = parseFloat(input.value);
+        const displayResultado = document.getElementById('resultado');
+        const displaySaldo = document.getElementById('saldo');
+
+        if (isNaN(valor) || valor <= 0) {
+            alert("Digite um valor válido!");
+            return;
+        }
+
+        if (valor > saldo) {
+            displayResultado.innerHTML = "<span class='lose'>Saldo Insuficiente!</span>";
+            return;
+        }
+
+        // Simulação de RNG (45% de chance de vitória)
+        const sorteio = Math.random();
+        
+        if (sorteio > 0.55) {
+            const ganho = valor * 2;
+            saldo += valor; // Lucro líquido de 1x o valor
+            displayResultado.innerHTML = <span class='win'>VITÓRIA! Você ganhou R$ ${ganho.toFixed(2)}</span>;
+        } else {
+            saldo -= valor;
+            displayResultado.innerHTML = <span class='lose'>DERROTA! Tente novamente.</span>;
+        }
+
+        displaySaldo.innerText = saldo.toFixed(2);
+    }
+</script>
+
+</body>
+</html>
