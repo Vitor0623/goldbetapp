@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GoldBet - Ouro Puro</title>
+    <style>
+        :root { --primary: #d4af37; --secondary: #f1c40f; --bg: #0a0a0a; --card: #161616; --text: #ffffff; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; overflow-x: hidden; }
+        
+        /* Utility */
+        .hidden { display: none !important; }
+        .gold-text { color: var(--primary); font-weight: bold; }
+
+        /* Header Fixa */
+        header { background: var(--card); padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 20px; font-weight: 900; letter-spacing: 1px; color: var(--primary); }
+        .balance-badge { background: #222; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--primary); font-size: 14px; }
+
+        /* Telas */
+        .screen { padding: 20px; animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Forms */
+        .card { background: var(--card); padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 10px; border: 1px solid #333; background: #000; color: #fff; outline: none; }
+        input:focus { border-color: var(--primary); }
+
+        /* Botões */
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 10px; font-size: 16px; font-weight: 800; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+        .btn-gold { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #000; }
+        .btn-gold:active { transform: scale(0.98); }
+        .btn-deposit { background: #27ae60; color: white; margin-top: 10px; font-size: 14px; padding: 10px; }
+
+        /* Jogo Area */
+        .game-board { background: #000; height: 150px; border-radius: 15px; margin: 20px 0; display: flex; align-items: center; justify-content: center; border: 1px dashed var(--primary); font-size: 40px; position: relative; overflow: hidden; }
+        .multiplier { z-index: 2; font-weight: 900; }
+
+        /* Tab Bar (Mobile) */
+        nav { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid #333; }
+        nav div { font-size: 10px; color: #888; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <header id="mainHeader" class="hidden">
+        <div class="logo">GOLDBET</div>
+        <div class="balance-badge">R$ <span id="userBalance">0.00</span></div>
+    </header>
+
+    <section id="loginScreen" class="screen">
+        <div style="text-align: center; margin-bottom: 30px; margin-top: 50px;">
+            <h1 style="font-size: 40px; color: var(--primary); margin: 0;">🏆</h1>
+            <h2>Bem-vindo à GoldBet</h2>
+            <p style="color: #888;">A plataforma dos campeões</p>
+        </div>
+        <div class="card">
+            <input type="text" id="username" placeholder="Usuário">
+            <input type="password" id="password" placeholder="Senha">
+            <button class="btn btn-gold" onclick="handleAuth()">Entrar agora</button>
+            <p style="font-size: 12px; color: #666; text-align: center; margin-top: 15px;">Ao entrar você aceita os termos de uso.</p>
+        </div>
+    </section>
+
+    <section id="gameScreen" class="screen hidden">
+        <div class="card">
+            <h3 style="margin-top: 0;">🎰 Double Gold</h3>
+            <p style="font-size: 13px; color: #aaa;">Tente dobrar sua banca nesta rodada!</p>
+            
+            <div class="game-board">
+                <div id="displayStatus" class="multiplier">1.00x</div>
+            </div>
+
+            <label style="font-size: 12px; color: var(--primary);">VALOR DA APOSTA (R$)</label>
+            <input type="number" id="betAmount" value="10">
+            
+            <button id="btnPlay" class="btn btn-gold" onclick="playGame()">COMEÇAR RODADA</button>
+            <button class="btn btn-deposit" onclick="addFunds()">+ DEPOSITAR VIA PIX</button>
+        </div>
+
+        <div style="margin-top: 20px; text-align: left;" id="history">
+            <p style="font-size: 12px; color: #555;">ÚLTIMOS RESULTADOS:</p>
+            <div id="historyList"></div>
+        </div>
+    </section>
+
+    <nav id="navBar" class="hidden">
+        <div style="color: var(--primary);">🏠<br>Início</div>
+        <div>🎲<br>Cassino</div>
+        <div>👤<br>Perfil</div>
+        <div>⚙️<br>Suporte</div>
+    </nav>
+</div>
+
+<script>
+    let state = {
+        logged: false,
+        name: "",
+        balance: 100.00,
+        isPlaying: false
+    };
+
+    function handleAuth() {
+        const user = document.getElementById('username').value;
+        if(user.length < 3) return alert("Digite um nome válido!");
+        
+        state.logged = true;
+        state.name = user;
+        
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('mainHeader').classList.remove('hidden');
+        document.getElementById('gameScreen').classList.remove('hidden');
+        document.getElementById('navBar').classList.remove('hidden');
+        
+        updateUI();
+    }
+
+    function updateUI() {
+        document.getElementById('userBalance').innerText = state.balance.toFixed(2);
+    }
+
+    function playGame() {
+        if(state.isPlaying) return;
+        
+        const amount = parseFloat(document.getElementById('betAmount').value);
+        if(amount > state.balance) return alert("Saldo insuficiente!");
+        if(amount <= 0) return alert("Valor inválido!");
+
+        state.isPlaying = true;
+        state.balance -= amount;
+        updateUI();
+
+        const display = document.getElementById('displayStatus');
+        const btn = document.getElementById('btnPlay');
+        
+        btn.innerText = "SORTEANDO...";
+        btn.disabled = true;
+        display.style.color = "white";
+
+        let counter = 1.00;
+        let timer = setInterval(() => {
+            counter += 0.1;
+            display.innerText = counter.toFixed(2) + "x";
+            if(counter > 2.0) clearInterval(timer);
+        }, 50);
+
+        setTimeout(() => {
+            clearInterval(timer);
+            const win = Math.random() > 0.6; // 40% chance
+            
+            if(win) {
+                const prize = amount * 2;
+                state.balance += prize;
+                display.innerText = "GANHOU!";
+                display.style.color = "#27ae60";
+                addHistory("Vitoria", amount * 2);
+            } else {
+                display.innerText = "PERDEU";
+                display.style.color = "#e74c3c";
+                addHistory("Derrota", amount);
+            }
+
+            state.isPlaying = false;
+            btn.innerText = "COMEÇAR RODADA";
+            btn.disabled = false;
+            updateUI();
+        }, 1500);
+    }
+
+    function addHistory(type, val) {
+        const list = document.getElementById('historyList');
+        const item = document.createElement('span');
+        item.style.marginRight = "10px";
+        item.style.fontSize = "12px";
+        item.style.padding = "2px 8px";
+        item.style.borderRadius = "5px";
+        item.style.background = type === "Vitoria" ? "#27ae6033" : "#e74c3c33";
+        item.innerText = (type === "Vitoria" ? "✔ " : "✘ ") + "R$ " + val.toFixed(2);
+        list.prepend(item);
+    }
+
+    function addFunds() {
+        alert("Integração de PIX: Para ativar depósitos reais, você precisa de uma chave de API (SuitPay ou Mercado Pago). Por enquanto, ganhando +R$ 50 de teste!");
+        state.balance += 50;
+        updateUI();
+    }
+</script>
+</body>
+</html>
